@@ -99,9 +99,9 @@ private:
                 interval.second *= interval2.second;
                 break;
 
-            case BinOp::DIV:
-                interval.first /= interval2.first;
-                interval.second /= interval2.second;
+            case BinOp::DIV: //WHY??????
+                interval.first /= interval2.second;
+                interval.second /= interval2.first;
                 break;
             
             default:
@@ -113,6 +113,33 @@ private:
 
         BinOp expression = node.getValueBinOp();                       // Operation to perform
         std::cout << "Exp: " << expression << std::endl;
+
+        if(node.children[0].type == NodeType::ARITHM_OP){
+            if(node.children[1].type == NodeType::INTEGER){
+                handle_ar_op(node.children[0], interval);
+                int value2 = node.children[1].getValueInt();
+                op_int_val(expression, interval, value2);
+            }
+        }
+
+        if(node.children[0].type == NodeType::ARITHM_OP){
+            if(node.children[1].type == NodeType::VARIABLE){
+                handle_ar_op(node.children[0], interval);
+                //print interval
+                std::cout << "Interval: [" << interval.first << ", " << interval.second << "]" << std::endl;
+                std::string value2 = node.children[1].getValueString();
+                std::pair<int, int> interval2 = store.get_interval(value2);
+                op_int_int(expression, interval, interval2);
+            }
+        }
+
+        if(node.children[1].type == NodeType::ARITHM_OP){
+            if(node.children[0].type == NodeType::INTEGER){
+                handle_ar_op(node.children[1], interval);
+                int value1 = node.children[0].getValueInt();
+                op_int_val(expression, interval, value1);
+            }
+        }
 
         if(node.children[0].type == NodeType::INTEGER){
             if(node.children[1].type == NodeType::INTEGER){
@@ -162,6 +189,11 @@ private:
     }
 
     void traverse(const ASTNode& node){
+        if (node.type == NodeType::PRE_CON){
+            int lb = node.children[0].children[0].getValueInt();
+            int ub = node.children[1].children[0].getValueInt();
+            store.create_interval(node.children[0].children[1].getValueString(), lb, ub);
+        }
         if (node.type == NodeType::ASSIGNMENT) {
             std::string val_to_ass = node.getChildernValueString(0);
 
