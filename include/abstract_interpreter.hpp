@@ -32,7 +32,8 @@ private:
                 // std::cout << "AR OP" << std::endl;
                 handle_ar_op(child, interval);
                 if(store.contains(val_to_ass)){
-                    store.update_interval(val_to_ass, interval.first, interval.second);
+                    std::pair<int, int> currInt = store.get_interval(val_to_ass);
+                    Interval::join_intervals(currInt, interval);
                 }else{
                     store.create_interval(val_to_ass, interval.first, interval.second);
                 }
@@ -309,16 +310,25 @@ private:
 
             //find if there's an else statement
             bool else_statement = false;
+            bool else_ifelse = false;
             for (const auto& child : node.children){
                 if (child.getValueString() == "Else-Body"){
                     else_statement = true;
+                    if(child.children[0].type == NodeType::IFELSE){
+                        else_ifelse = true;
+                    }
                 }
             }
 
             if (else_statement){
-                std::pair<int, int> intervalFalse;
-                handle_assignment(node.children[2].children[0], intervalFalse, true);
-                Interval::join_intervals(intervalTrue, intervalFalse);
+                if (else_ifelse){
+                    // std::cout << "Else IfElse" << std::endl;
+                    handle_if_else(node.children[2].children[0]);
+                } else {
+                    std::pair<int, int> intervalFalse;
+                    handle_assignment(node.children[2].children[0], intervalFalse, true);
+                    Interval::join_intervals(intervalTrue, intervalFalse);
+                }
             }
 
             if(store.contains(var)){
