@@ -299,30 +299,34 @@ private:
     }
 
     void handle_if_else(const ASTNode& node){
-        std::string var = node.children[1].children[0].children[0].getValueString();
-        std::pair<int, int> intervalTrue;
-        handle_assignment(node.children[1].children[0], intervalTrue, true);
-
-        //find if there's an else statement
-        bool else_statement = false;
-        for (const auto& child : node.children){
-            if (child.getValueString() == "Else-Body"){
-                else_statement = true;
-            }
-        }
-
-        if(!else_statement){
-            // std::cout << "No else statement" << std::endl;
+        
+        if(node.children[1].children[0].type == NodeType::IFELSE && node.children[1].children[0].getValueString() == "IfElse"){
+            handle_if_else(node.children[1].children[0]);
         } else {
-            std::pair<int, int> intervalFalse;
-            handle_assignment(node.children[2].children[0], intervalFalse, true);
-            Interval::join_intervals(intervalTrue, intervalFalse);
-        }
+            std::string var = node.children[1].children[0].children[0].getValueString();
+            std::pair<int, int> intervalTrue;
+            handle_assignment(node.children[1].children[0], intervalTrue, true);
 
-        if(store.contains(var)){
-            store.update_interval(var, intervalTrue.first, intervalTrue.second);
-        } else{
-            store.create_interval(var, intervalTrue.first, intervalTrue.second);
+            //find if there's an else statement
+            bool else_statement = false;
+            for (const auto& child : node.children){
+                if (child.getValueString() == "Else-Body"){
+                    else_statement = true;
+                }
+            }
+
+            if (else_statement){
+                std::pair<int, int> intervalFalse;
+                handle_assignment(node.children[2].children[0], intervalFalse, true);
+                Interval::join_intervals(intervalTrue, intervalFalse);
+            }
+
+            if(store.contains(var)){
+                std::pair<int, int> currInt = store.get_interval(var);
+                Interval::join_intervals(currInt, intervalTrue);
+            } else{
+                store.create_interval(var, intervalTrue.first, intervalTrue.second);
+            }
         }
     }
 
