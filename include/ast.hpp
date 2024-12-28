@@ -100,6 +100,10 @@ struct ASTNode {
         return std::get<std::string>(value);
     }
 
+    LogicOp getValueLogicOp() const {
+        return std::get<LogicOp>(value);
+    }
+
     NodeType getChildernType(int i) const {
         return children[i].type;
     }
