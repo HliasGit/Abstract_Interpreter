@@ -48,13 +48,18 @@ public:
     }
 
     bool contains(const auto& value_f) const {
-    for (const auto& inte : store) {
-        if (inte.first == value_f) {
-            return true;
+        for (const auto& inte : store) {
+            if (inte.first == value_f) {
+                return true;
+            }
         }
+        return false;
     }
-    return false;
-}
+
+    void deepCopyInt(std::pair<int, int>& interval, const std::pair<int, int>& interval2){
+        interval.first = interval2.first;
+        interval.second = interval2.second;
+    }
 
     void print(){
         for (auto& [var, interval] : store){

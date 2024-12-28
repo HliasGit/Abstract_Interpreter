@@ -4,6 +4,7 @@
 #include <iostream>
 #include "interval_store.hpp"
 #include "ast.hpp"
+#include "interval.hpp"
 
 class AbstractInterpreter{
     using VType = std::variant<std::string, int, BinOp, LogicOp>;
@@ -21,11 +22,35 @@ public:
     }
 
 private:
-    void handle_assignment(const ASTNode& node){
-        std::string var = node.getChildernValueString(0);
-        int lb = node.getChildernValueInt(1);
-        int ub = node.getChildernValueInt(1);
-        store.create_interval(var, lb, ub);
+    void handle_assignment(const ASTNode& node, std::pair<int, int> &interval, bool is_ifelse = false){
+        std::string val_to_ass = node.children[0].getValueString();
+
+        //Here I check if the node has an arithmetic operation
+        bool ar_op = false;
+        for (const auto& child : node.children){
+            if (child.type == NodeType::ARITHM_OP){
+                // std::cout << "AR OP" << std::endl;
+                handle_ar_op(child, interval);
+                if(store.contains(val_to_ass)){
+                    store.update_interval(val_to_ass, interval.first, interval.second);
+                }else{
+                    store.create_interval(val_to_ass, interval.first, interval.second);
+                }
+                ar_op = true;
+            }
+        }
+
+        if(!ar_op){
+            int value = node.children[1].getValueInt();
+            if (!is_ifelse){
+                store.create_interval(val_to_ass, value, value);
+                store.deepCopyInt(interval, store.get_interval(val_to_ass));
+            } else {
+                interval.first = value;
+                interval.second = value;
+                // std::cout << "Temporary interval [" << interval.first << ", " << interval.second << "]" << std::endl; 
+            }
+        }
     }
 
     void op_val_val(BinOp op, int value1, int value2, std::pair<int, int> &interval){
@@ -198,7 +223,7 @@ private:
         }
 
         if(op == LogicOp::GEQ){
-            if(interval.first >= value_to_check){
+            if(interval.first == value_to_check){
                 std::cout << "Assertion passed for " << value_to_check << std::endl;
             }else{
                 std::cout << "Assertion failed for " << value_to_check << std::endl;
@@ -206,7 +231,7 @@ private:
         }
 
         if(op == LogicOp::LEQ){
-            if(interval.second <= value_to_check){
+            if(interval.second == value_to_check){
                     std::cout << "Assertion passed for " << value_to_check << std::endl;
             }else{
                 std::cout << "Assertion failed for " << value_to_check << std::endl;
@@ -241,7 +266,7 @@ private:
         }
 
         if(op == LogicOp::GEQ){
-            if(interval.first >= interval2.first){
+            if(interval.first == interval2.first){
                 std::cout << "Assertion passed for " << interval.first << " and " << interval2.first << std::endl;
             }else{
                 std::cout << "Assertion failed for " << interval.first << " and " << interval2.first << std::endl;
@@ -249,7 +274,7 @@ private:
         }
 
         if(op == LogicOp::LEQ){
-            if(interval.second <= interval2.second){
+            if(interval.second == interval2.second){
                     std::cout << "Assertion passed for " << interval.second << " and " << interval2.second << std::endl;
             }else{
                 std::cout << "Assertion failed for " << interval.second << " and " << interval2.second << std::endl;
@@ -270,6 +295,34 @@ private:
             }else{
                 std::cout << "Assertion failed for " << interval.second << " and " << interval2.second << std::endl;
             }
+        }
+    }
+
+    void handle_if_else(const ASTNode& node){
+        std::string var = node.children[1].children[0].children[0].getValueString();
+        std::pair<int, int> intervalTrue;
+        handle_assignment(node.children[1].children[0], intervalTrue, true);
+
+        //find if there's an else statement
+        bool else_statement = false;
+        for (const auto& child : node.children){
+            if (child.getValueString() == "Else-Body"){
+                else_statement = true;
+            }
+        }
+
+        if(!else_statement){
+            // std::cout << "No else statement" << std::endl;
+        } else {
+            std::pair<int, int> intervalFalse;
+            handle_assignment(node.children[2].children[0], intervalFalse, true);
+            Interval::join_intervals(intervalTrue, intervalFalse);
+        }
+
+        if(store.contains(var)){
+            store.update_interval(var, intervalTrue.first, intervalTrue.second);
+        } else{
+            store.create_interval(var, intervalTrue.first, intervalTrue.second);
         }
     }
 
@@ -302,32 +355,19 @@ private:
 
         // ASSIGNMENT
         if (node.type == NodeType::ASSIGNMENT) {
-            std::string val_to_ass = node.getChildernValueString(0);
-
-            //Here I check if the node has an arithmetic operation
-            bool ar_op = false;
-            for (const auto& child : node.children){
-                if (child.type == NodeType::ARITHM_OP){
-                    // std::cout << "AR OP" << std::endl;
-                    std::pair<int, int> interval;
-                    handle_ar_op(child, interval);
-                    if(store.contains(val_to_ass)){
-                        store.update_interval(val_to_ass, interval.first, interval.second);
-                    }else{
-                        store.create_interval(val_to_ass, interval.first, interval.second);
-                    }
-                    ar_op = true;
-                }
-            }
-
-            if(!ar_op){
-                handle_assignment(node);
-            }
+            std::pair<int, int> interval;
+            handle_assignment(node, interval);
         }
 
+        // IF-ELSE
+        if (node.type == NodeType::IFELSE && node.getValueString() == "IfElse") {
+            handle_if_else(node);
+        }
 
-        for (const auto& child : node.children){
-            traverse(child);
+        if(node.type != NodeType::ASSIGNMENT && node.type != NodeType::IFELSE){
+            for (const auto& child : node.children){
+                traverse(child);
+            }
         }
     }
 };
