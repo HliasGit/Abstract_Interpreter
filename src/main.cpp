@@ -3,7 +3,7 @@
 
 #include "parser.hpp"
 #include "ast.hpp"
-#include "abstract_interpreter.hpp"
+#include "abstract_interpreter_old.hpp"
 
 
 int main(int argc, char** argv) {

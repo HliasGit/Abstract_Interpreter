@@ -8,9 +8,6 @@
 
 class AbstractInterpreter{
 
-    const int64_t int_min = -2147483648;
-    const int64_t int_max = 2147483647;
-
     using VType = std::variant<std::string, int, BinOp, LogicOp>;
 
     IntervalStore store;
@@ -59,151 +56,6 @@ private:
         }
     }
 
-    void op_val_val(BinOp op, int value1, int value2, std::pair<int, int> &interval){
-        switch (op) {
-            case BinOp::ADD:
-                if((int64_t)value1 > int_max-(int64_t)value2){
-                    std::cout << "Overflow add" << std::endl;
-                    break;
-                }
-                interval.first = value1+value2;
-                interval.second = value1+value2;
-                break;
-            
-            case BinOp::SUB:
-                if((int64_t)value1 < int_min+(int64_t)value2){
-                    std::cout << "Overflow sub" << std::endl;
-                    break;
-                }
-                interval.first = value1-value2;
-                interval.second = value1-value2;
-                break;
-
-            case BinOp::MUL:
-                if((int64_t)value1 < int_min / (int64_t)value2 || (int64_t)value1 > int_max / (int64_t)value2){
-                    std::cout << "Overflow mul" << std::endl;
-                    break;
-                }
-                interval.first = value1*value2;
-                interval.second = value1*value2;
-                break;
-
-            case BinOp::DIV:
-                if(value2 == 0){
-                    std::cout << "Division by zero" << std::endl;
-                    break;
-                }
-
-                if((int64_t)value1 < int_min * (int64_t)value2 || (int64_t)value1 > int_max * (int64_t)value2){
-                    std::cout << "Overflow detected div" << std::endl;
-                    break;
-                }
-                interval.first = value1/value2;
-                interval.second = value1/value2;
-                break;
-            
-            default:
-                break;
-        }
-    }
-
-    void op_int_val(BinOp op, std::pair<int, int> &interval, int value){
-        switch (op) {
-            case BinOp::ADD:
-                if((int64_t)interval.first > int_max-(int64_t)value){
-                    std::cout << "Overflow add" << std::endl;
-                    break;
-                }
-                interval.first += value;
-                interval.second += value;
-                break;
-            
-            case BinOp::SUB:
-                if((int64_t)interval.first < int_min+(int64_t)value){
-                    std::cout << "Overflow sub" << std::endl;
-                    break;
-                }
-                interval.first -= value;
-                interval.second -= value;
-                break;
-
-            case BinOp::MUL:
-                if((int64_t)interval.first < int_min / (int64_t)value || (int64_t)interval.second > int_max / (int64_t)value){
-                    std::cout << "Overflow mul" << std::endl;
-                    break;
-                }
-                interval.first *= value;
-                interval.second *= value;
-                break;
-
-            case BinOp::DIV:
-                if(value == 0){
-                    std::cout << "Division by zero" << std::endl;
-                    break;
-                }
-
-                if((int64_t)interval.first < int_min * (int64_t)value || (int64_t)interval.second > int_max * (int64_t)value){
-                    std::cout << "Overflow detected div" << std::endl;
-                    break;
-                }
-                interval.first /= value;
-                interval.second /= value;
-                break;
-            
-            default:
-                break;
-        }
-    }
-
-    void op_int_int(BinOp op, std::pair<int, int> &interval, std::pair<int, int> &interval2){
-        switch (op) {
-            case BinOp::ADD:
-                if((int64_t)interval.second > int_max - (int64_t)interval2.second){
-                    std::cout << "Overflow detected add" << std::endl;
-                    break;
-                }
-                interval.first += interval2.first;
-                interval.second += interval2.second;
-                break;
-            
-            case BinOp::SUB:
-                if((int64_t)interval.first < int_min + (int64_t)interval2.first){
-                    std::cout << "Overflow detected sub" << std::endl;
-                    break;
-                }
-                interval.first -= interval2.first;
-                interval.second -= interval2.second;
-                break;
-
-            case BinOp::MUL:
-                if((int64_t)interval.first < int_min / (int64_t)interval2.first || (int64_t)interval.second > int_max / (int64_t)interval2.second){
-                    std::cout << "Overflow detected mul" << std::endl;
-                    break;
-                }
-                interval.first *= interval2.first;
-                interval.second *= interval2.second;
-                break;
-
-            case BinOp::DIV: // Division of the first with the second and vice versa 
-                if(interval2.first == 0 || interval2.second == 0){
-                    std::cout << "Division by zero" << std::endl;
-                    break;
-                }
-
-                if((int64_t)interval.first < int_min * (int64_t)interval2.first || (int64_t)interval.second > int_max * (int64_t)interval2.second){
-                    std::cout << "Overflow detected div" << std::endl;
-                    break;
-                }
-
-                interval.first /= interval2.second;
-                interval.second /= interval2.first;
-                break;
-            
-            default:
-                break;
-        }
-    }
-
     void handle_ar_op(const ASTNode& node, std::pair<int, int> &interval){
 
         BinOp expression = node.getValueBinOp();                       // Operation to perform
@@ -214,7 +66,7 @@ private:
             if(node.children[1].type == NodeType::INTEGER){
                 handle_ar_op(node.children[0], interval);
                 int value2 = node.children[1].getValueInt();
-                op_int_val(expression, interval, value2);
+                Interval::op_int_val(expression, interval, value2);
             }
         }
 
@@ -225,7 +77,7 @@ private:
                 // std::cout << "Interval: [" << interval.first << ", " << interval.second << "]" << std::endl;
                 std::string value2 = node.children[1].getValueString();
                 std::pair<int, int> interval2 = store.get_interval(value2);
-                op_int_int(expression, interval, interval2);
+                Interval::op_int_int(expression, interval, interval2);
             }
         }
 
@@ -233,7 +85,7 @@ private:
             if(node.children[0].type == NodeType::INTEGER){
                 handle_ar_op(node.children[1], interval);
                 int value1 = node.children[0].getValueInt();
-                op_int_val(expression, interval, value1);
+                Interval::op_int_val(expression, interval, value1);
             }
         }
 
@@ -245,7 +97,7 @@ private:
                 // std::cout << "second : " << value2 << std::endl;
                 interval.first = 0;
                 interval.second = 0;
-                op_val_val(expression, value1, value2, interval);
+                Interval::op_val_val(expression, value1, value2, interval);
             }
         }
 
@@ -256,7 +108,7 @@ private:
                 std::pair<int, int> interval2 = store.get_interval(value2);
                 interval.first = interval2.first;
                 interval.second = interval2.second;
-                op_int_val(expression, interval, value1);
+                Interval::op_int_val(expression, interval, value1);
             }
         }
 
@@ -267,7 +119,7 @@ private:
                 interval.first = interval2.first;
                 interval.second = interval2.second;
                 int value2 = node.children[1].getValueInt();
-                op_int_val(expression, interval, value2);
+                Interval::op_int_val(expression, interval, value2);
             }
         }
         
@@ -279,7 +131,7 @@ private:
                 interval.second = interval1.second;
                 std::string value2 = node.children[1].getValueString();
                 std::pair<int, int> interval2 = store.get_interval(value2);
-                op_int_int(expression, interval, interval2);
+                Interval::op_int_int(expression, interval, interval2);
             }
         }
     }
@@ -376,6 +228,7 @@ private:
         } else {
             std::string var = node.children[1].children[0].children[0].getValueString();
             std::pair<int, int> intervalTrue;
+            std::cout << "QUI " << var << std::endl;
             handle_assignment(node.children[1].children[0], intervalTrue, true);
 
             //find if there's an else statement
@@ -403,7 +256,13 @@ private:
 
             if(store.contains(var)){
                 std::pair<int, int> currInt = store.get_interval(var);
+                // print currInt and intervalTrue
+                std::cout << "curr " << currInt.first << "; " << currInt.second << " new " << intervalTrue.first << "; " << intervalTrue.second << std::endl;
+
                 Interval::join_intervals(currInt, intervalTrue);
+                store.update_interval(var, currInt);
+
+                std::cout << "after join " << currInt.first << "; " << currInt.second  << std::endl;
             } else{
                 store.create_interval(var, intervalTrue.first, intervalTrue.second);
             }

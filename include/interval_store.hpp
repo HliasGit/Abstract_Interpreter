@@ -16,6 +16,11 @@ public:
         std::cout << "Created interval for " << var << " : [" << lb << ", " << ub << "]" << std::endl;
     }    
 
+    void update_interval(const std::string &var, std::pair<int, int> &interval){
+        store[var] = {interval.first, interval.second};
+        std::cout << "Updated interval" << std::endl;
+    }
+
     std::pair<int,int> get_interval(const std::string& var){
         return store[var];
     }
