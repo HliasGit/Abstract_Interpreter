@@ -1,9 +1,10 @@
 int a;
 int b;
+int c;
 
 void main() {
-  a = 1;
-  b = 2;
-  b = a + b;
-  assert(a < b);
+  a = 2;
+  b = 3;
+  c = a + b;
+  assert(c == 5);
 }

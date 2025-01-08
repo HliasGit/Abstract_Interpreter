@@ -5,7 +5,9 @@
 #include <string>
 #include <iostream>
 
+
 class IntervalStore{
+
     std::map<std::string, std::pair<int, int>> store;
 
 public:
@@ -14,37 +16,8 @@ public:
         std::cout << "Created interval for " << var << " : [" << lb << ", " << ub << "]" << std::endl;
     }    
 
-    void add_interval(const std::string& var, int lb, int ub){
-        store[var] = {store[var].first + lb, store[var].second + ub};
-        std::cout << "Added interval for " << var << " : [" << store[var].first << ", " << store[var].second << "]" << std::endl;
-    }
-
-    void sub_interval(const std::string& var, int lb, int ub){
-        store[var] = {store[var].first - ub, store[var].second - lb};
-        std::cout << "Subtracted interval for " << var << " : [" << store[var].first << ", " << store[var].second << "]" << std::endl;
-    }
-
-    void mul_interval(const std::string& var, int lb, int ub){
-        store[var] = {store[var].first * lb, store[var].second * ub};
-        std::cout << "Multiplied interval for " << var << " : [" << store[var].first << ", " << store[var].second << "]" << std::endl;
-    }
-
-    void div_interval(const std::string& var, int lb, int ub){
-        store[var] = {store[var].first / lb, store[var].second / ub};
-        std::cout << "Divided interval for " << var << " : [" << store[var].first << ", " << store[var].second << "]" << std::endl;
-    }
-
-    void update_interval(const std::string& var, int lb, int ub){
-        store[var] = {lb, ub};
-        std::cout << "Updated interval for " << var << " : [" << store[var].first << ", " << store[var].second << "]" << std::endl;
-    }
-
     std::pair<int,int> get_interval(const std::string& var){
         return store[var];
-    }
-
-    void remove_interval(const std::string& var){
-        store.erase(var);
     }
 
     bool contains(const auto& value_f) const {
