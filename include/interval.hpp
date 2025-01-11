@@ -10,7 +10,7 @@ public:
     static void join_intervals(std::pair<int, int>& interval1, std::pair<int, int>& interval2){
         interval1.first = std::min(interval1.first, interval2.first);
         interval1.second = std::max(interval1.second, interval2.second);
-        std::cout << "In the join " << interval1.first << "; " << interval1.second << std::endl;
+        // std::cout << "In the join " << interval1.first << "; " << interval1.second << std::endl;
     }
 
     static void op_int_int(BinOp op, std::pair<int, int> &interval, std::pair<int, int> &interval2){

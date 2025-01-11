@@ -228,7 +228,10 @@ private:
         } else {
             std::string var = node.children[1].children[0].children[0].getValueString();
             std::pair<int, int> intervalTrue;
-            std::cout << "QUI " << var << std::endl;
+            // std::cout << "QUI " << var << std::endl;
+            if(var == node.children[0].children[0].children[0].getValueString()){
+                store.remove_interval(var);
+            }
             handle_assignment(node.children[1].children[0], intervalTrue, true);
 
             //find if there's an else statement
@@ -257,12 +260,12 @@ private:
             if(store.contains(var)){
                 std::pair<int, int> currInt = store.get_interval(var);
                 // print currInt and intervalTrue
-                std::cout << "curr " << currInt.first << "; " << currInt.second << " new " << intervalTrue.first << "; " << intervalTrue.second << std::endl;
+                // std::cout << "curr " << currInt.first << "; " << currInt.second << " new " << intervalTrue.first << "; " << intervalTrue.second << std::endl;
 
                 Interval::join_intervals(currInt, intervalTrue);
                 store.update_interval(var, currInt);
 
-                std::cout << "after join " << currInt.first << "; " << currInt.second  << std::endl;
+                // std::cout << "after join " << currInt.first << "; " << currInt.second  << std::endl;
             } else{
                 store.create_interval(var, intervalTrue.first, intervalTrue.second);
             }

@@ -21,6 +21,11 @@ public:
         std::cout << "Updated interval" << std::endl;
     }
 
+    void remove_interval(const std::string &var){
+        store.erase(var);
+        std::cout << "Removed interval" << std::endl;
+    }
+
     std::pair<int,int> get_interval(const std::string& var){
         return store[var];
     }
