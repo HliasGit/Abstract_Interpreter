@@ -1,16 +1,5 @@
-## How to use?
+# Abstract Interpreter done by Elia Vaglietti
 
-**Step 1.** Compiling the program.
-```cmd 
-mkdir build
-cd build
-cmake ..
-make 
-cd ..
-```
+In the `abstract_interpreter_old.hpp`, `interval.hpp` and `interval_store.hpp` files I fully developed the points `1` and `2`.
 
-**Step 2.** Parsing the program by its name.
-In the following command, the parser will parse ./tests/01.c
-```cmd
-./build/absint tests/easy1.c
-```
+In the `equational_interpreter.hpp` I started the developement of the point `3`.

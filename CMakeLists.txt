@@ -15,6 +15,10 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(cpp_peglib)
 
 add_executable(absint src/main.cpp)
+add_executable(equational src/main_test_eq.cpp)
 target_include_directories(absint PRIVATE include)
+target_include_directories(equational PRIVATE include)
 target_compile_features(absint PRIVATE cxx_std_17)
+target_compile_features(equational PRIVATE cxx_std_17)
 target_link_libraries(absint cpp_peglib)
+target_link_libraries(equational cpp_peglib)

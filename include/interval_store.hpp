@@ -8,17 +8,18 @@
 
 class IntervalStore{
 
-    std::map<std::string, std::pair<int, int>> store;
+public:
+    std::map<std::string, std::pair<int64_t, int64_t>> store;
 
 public:
-    void create_interval(const std::string& var, int lb, int ub){
+    void create_interval(const std::string& var, int64_t lb, int64_t ub){
         store.insert({var, {lb, ub}}); 
         std::cout << "Created interval for " << var << " : [" << lb << ", " << ub << "]" << std::endl;
     }    
 
     void update_interval(const std::string &var, std::pair<int, int> &interval){
         store[var] = {interval.first, interval.second};
-        std::cout << "Updated interval" << std::endl;
+        std::cout << "Updated interval for " << var << " : [" << interval.first << ", " << interval.second << "]"  << std::endl;
     }
 
     void remove_interval(const std::string &var){
